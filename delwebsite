@@ -1,0 +1,61 @@
+#!/bin/sh
+ 
+webroot="/Users/user/Development/php/"
+archivedir="/Users/user/Development/Archived/"
+vhostdir="/etc/apache2/vhosts/"
+extension=".conf"
+restartcmd="/usr/bin/sudo apachectl restart"
+hostsfile="/etc/hosts"
+logdir="/var/log/apache2/"
+errorlogext="_error.log"
+accesslogext="_access.log"
+ 
+# check to make sure that the $1 argument only contains letters, numbers and dashes
+if ! [[ "$1" =~ [^a-zA-Z0-9-] ]]; then
+  continue
+else
+  echo "Invalid hostname. Please use only letters, numbers and dashes."
+  exit
+fi
+ 
+# input is valid, continue with script
+if [ "$1" != '' ]; then
+  # remove the line from the hosts file
+  ##sudo sed -i '' "/$1.localhost/d" "$hostsfile"
+  grep -vF "$1.localhost" "$hostsfile" > "$hostsfile.tmp" && mv "$hostsfile.tmp" "$hostsfile"
+  echo "deleted $1.localhost from $hostsfile"
+  # remove the vhost conf file
+  if [ -f "$vhostdir$1$extension" ]; then
+    sudo rm "$vhostdir$1$extension"
+    echo "deleted $vhostdir$1$extension"
+  fi
+  # remove the webroot directory
+  if [ -d "$webroot$1/" ]; then
+    sudo rm -rf "$webroot$1/"
+    echo "deleted $webroot$1/"
+  else
+    echo "$webroot$1/ does not exist"
+  fi
+  # remove Apache access log file
+  if [ -f "$logdir$1$accesslogext" ]; then
+    sudo rm "$logdir$1$accesslogext"
+    echo "deleted $logdir$1$accesslogext"
+  else
+    echo "$logdir$1$accesslogext does not exist"
+  fi
+  # remove Apache error log file
+  if [ -f "$logdir$1$errorlogext" ]; then
+    sudo rm "$logdir$1$errorlogext"
+    echo "deleted $logdir$1$errorlogext"
+  else
+    echo "$logdir$1$errorlogext does not exist"
+  fi
+  # restart Apache
+  $restartcmd
+  echo "restarted apache"
+elif [ "$1" = 'help' ] || [ "$1" = '' ]; then
+  echo "The 'delwebsite' command will remove the virtualhost from apache and also permanently delete the website files."
+  echo "Usage:"
+  echo "sudo delwebsite <hostname>"
+  echo "Example: to delete hostname.localhost just run the command 'sudo delwebsite hostname'"
+fi

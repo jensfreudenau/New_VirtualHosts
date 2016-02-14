@@ -1,0 +1,30 @@
+#!/bin/sh
+ 
+logdir="/var/log/apache2/"
+errlog=".localhost-error_log"
+acclog=".localhost-access_log"
+syslogfile="/var/log/system.log"
+ 
+# check to make sure that the $1 argument only contains letters, numbers and dashes
+if ! [[ "$1" =~ [^a-zA-Z0-9-] ]]; then
+  continue
+else
+  echo "Invalid hostname. Please use only letters, numbers and dashes."
+  exit
+fi
+ 
+# input is valid, continue with script
+if [ "$1" != '' ]; then
+  if [ -f "$syslogfile" ] && [ "$2" == "--syslog" ]; then
+    multitail -n 0 -ci red -I $logdir$1$errlog -n 0 -ci blue -I $logdir$1$acclog -n 0 -I $syslogfile 
+  else
+    multitail -n 0 -ci red -I $logdir$1$errlog -n 0 -ci blue -I $logdir$1$acclog
+  fi
+elif [ "$1" = 'help' ] || [ "$1" = '' ]; then
+  echo "The 'log' command displays apache log files using multitail."
+  echo "Usage:"
+  echo "log <hostname> [--syslog]"
+  echo "Example: to tail the logs for hostname.localhost just run the command 'log hostname.localhost'"
+  echo "Optional: Include the --syslog option to also open a window tailing the system log."
+  echo "Using Multitail: To list available commands, use F1. To clear the current window, press 'o'. To clear all windows, press 'O'."
+fi

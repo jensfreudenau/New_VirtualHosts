@@ -1,0 +1,56 @@
+#!/bin/sh
+ 
+webroot="/Users/user/Development/php/"
+vhostdir="/private/etc/apache2/extra/"
+extension=".conf"
+restartcmd="/usr/bin/sudo apachectl restart"
+usrgrp="user:staff"
+hostsfile="/etc/hosts"
+
+# check to make sure that the $1 argument only contains letters, numbers and dashes
+if ! [[ "$1" =~ [^a-zA-Z0-9-] ]]; then
+  continue
+else
+  echo "Invalid hostname. Please use only letters, numbers and dashes."
+  exit
+fi
+ 
+# input is valid, continue with script
+if [ "$1" != '' ]; then
+  if [ ! -f "$vhostdir/$1$extension" ]; then
+    cp "$vhostdir/skeleton" "$vhostdir$1$extension"
+    echo "created $vhostdir$1$extension"
+  else
+    mv "$vhostdir/$1$extension" "$vhostdir$1$extension.bak"
+    cp "$vhostdir/skeleton" "$vhostdir$1$extension"
+    echo "created $vhostdir$1$extension and made a backup of the existing conf"
+  fi
+  find "$vhostdir$1$extension" -type f -exec sed -i .bk "s/SKELETON/$1/" {} \;
+  sleep 1
+  echo "removing backup conf file:"
+  rm -v $vhostdir/*.bk
+  if [ ! -d "$webroot$1/" ]; then
+    mkdir "$webroot$1/"
+    chown -Rv $usrgrp "$webroot$1/"
+    echo "created $webroot$1/"
+  else
+    echo "$webroot$1/ already exists"
+  fi
+  if [ -d "$webroot$1/" ]; then
+    # add line to hosts file
+    echo "127.0.0.1  $1.local" >> $hostsfile
+    echo "added a new line for $1.local to $hostsfile" 
+	touch "/var/log/apache2/$1_access.log" 
+	chmod +x "/var/log/apache2/$1_access.log"
+	touch "/var/log/apache2/$1_error.log"
+	chmod +x "/var/log/apache2/$1_error.log"
+  fi
+  $restartcmd
+  echo "reloaded apache"
+# if no arguments are supplied show help information
+elif [ "$1" = 'help' ] || [ "$1" = '' ]; then
+  echo "The 'addwebsite' command will create a new virtualhost in apache and also create a directory for the website files."
+  echo "Usage:"
+  echo "sudo addwebsite <hostname>"
+  echo "Example: to create hostname.local just run the command 'sudo addwebsite hostname'"
+fi

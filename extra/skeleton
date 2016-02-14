@@ -1,0 +1,16 @@
+<VirtualHost *:80>
+ ServerAdmin webmaster@localhost
+ ServerName SKELETON.local
+ DocumentRoot /Users/user/Development/php/SKELETON
+ 
+ <Directory /Users/user/Development/php/SKELETON/>
+  Options +FollowSymLinks
+  Require all granted
+ </Directory>
+ 
+ ErrorLog /var/log/apache2/SKELETON_error.log
+ # Possible values include: debug, info, notice, warn, error, crit, alert, emerg
+ LogLevel warn
+ 
+ CustomLog /var/log/apache2/SKELETON_access.log combined
+</VirtualHost>

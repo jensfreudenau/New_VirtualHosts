@@ -1,0 +1,53 @@
+#!/bin/sh
+ 
+webroot="/Users/user/Development/php/"
+archivedir="/Users/user/Development/php/Archived/"
+vhostdir="/etc/apache2/vhosts/"
+extension=".conf"
+restartcmd="/usr/bin/sudo apachectl restart"
+hostsfile="/etc/hosts"
+logdir="/var/log/apache2/"
+errorlogext="_error.log"
+accesslogext="_access.log"
+ 
+# check to make sure that the $1 argument only contains letters, numbers and dashes
+if ! [[ "$1" =~ [^a-zA-Z0-9-] ]]; then
+  continue
+else
+  echo "Invalid hostname. Please use only letters, numbers and dashes."
+  exit
+fi
+ 
+# input is valid, continue with script
+if [ "$1" != '' ]; then
+  # remove the vhost conf file
+  if [ -f "$vhostdir$1$extension" ]; then
+    sudo rm "$vhostdir$1$extension"
+    echo "deleted $vhostdir$1$extension"
+  fi
+  # move the webroot directory to ~/Archived
+  if [ -d "$webroot$1/" ]; then
+    sudo mv "$webroot$1/" $archivedir
+    echo "archived $webroot$1/"
+  else
+    echo "$webroot$1/ does not exist"
+  fi
+  # remove Apache access log file
+  if [ -f "$logdir$1$accesslogext" ]; then
+    sudo rm "$logdir$1$accesslogext"
+    echo "deleted $logdir$1$accesslogext"
+  fi
+  # remove Apache error log file
+  if [ -f "$logdir$1$errorlogext" ]; then
+    sudo rm "$logdir$1$errorlogext"
+    echo "deleted $logdir$1$errorlogext"
+  fi
+  # restart Apache
+  $restartcmd
+  echo "restarted apache"
+elif [ "$1" = 'help' ] || [ "$1" = '' ]; then
+  echo "The 'archivewebsite' command will remove the virtualhost from apache but keep the website files in the specified archive directory."
+  echo "Usage:"
+  echo "sudo archivewebsite <hostname>"
+  echo "Example: to archive hostname.localhost just run the command 'sudo archivewebsite hostname'"
+fi
